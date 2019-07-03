@@ -17,51 +17,55 @@ public class Main {
     private static final String PASSWORD = "lxfkubkanxacdevr";
 
     public static void main(String[] args) {
-        path("/api", () -> post("/mail", (request, response) -> {
+        path("/api", () -> {
+            get("/info", ((request, response) -> "Mail API is running"));
 
-            Properties prop = new Properties();
-            prop.put("mail.smtp.host", SMTP);
-            prop.put("mail.smtp.port", PORT);
-            prop.put("mail.smtp.auth", "true");
-            prop.put("mail.smtp.starttls.enable", "true"); //TLS
+            post("/mail", (request, response) -> {
 
-            Session session = Session.getInstance(prop,
-                    new javax.mail.Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(USER, PASSWORD);
-                        }
-                    });
+                Properties prop = new Properties();
+                prop.put("mail.smtp.host", SMTP);
+                prop.put("mail.smtp.port", PORT);
+                prop.put("mail.smtp.auth", "true");
+                prop.put("mail.smtp.starttls.enable", "true"); //TLS
 
-            if (request.body() != null) {
-                JSONObject json = new JSONObject(request.body());
-                String subject = json.getString("subject");
-                String body = json.getString("body");
-                String from = json.getString("from");
+                Session session = Session.getInstance(prop,
+                        new Authenticator() {
+                            protected PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(USER, PASSWORD);
+                            }
+                        });
 
-                try {
+                if (request.body() != null) {
+                    JSONObject json = new JSONObject(request.body());
+                    String subject = json.getString("subject");
+                    String body = json.getString("body");
+                    String from = json.getString("from");
 
-                    Message message = new MimeMessage(session);
-                    message.setFrom(new InternetAddress(from));
-                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
-                    message.setSubject(subject);
-                    message.setText(body);
+                    try {
 
-                    Transport.send(message);
+                        Message message = new MimeMessage(session);
+                        message.setFrom(new InternetAddress(from));
+                        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
+                        message.setSubject(subject);
+                        message.setText(body);
 
-                    System.out.println("Sent mail");
+                        Transport.send(message);
 
-                } catch (MessagingException e) {
-                    e.printStackTrace();
-                    response.status(500);
-                    response.body("ERROR: Mail could not be send");
+                        System.out.println("Sent mail");
+
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                        response.status(500);
+                        response.body("ERROR: Mail could not be send");
+                    }
+                } else {
+                    response.status(400);
+                    response.body("ERROR: Missing request body");
+                    return response;
                 }
-            } else {
-                response.status(400);
-                response.body("ERROR: Missing request body");
+                response.status(200);
                 return response;
-            }
-            response.status(200);
-            return response;
-        }));
+            });
+        });
     }
 }
