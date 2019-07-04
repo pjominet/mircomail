@@ -23,51 +23,60 @@ public class Main {
     public static void main(String[] args) {
         Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null , null);
 
-        path("/api", () -> post("/mail", (request, response) -> {
-
-            Properties prop = new Properties();
-            prop.put("mail.smtp.host", SMTP);
-            prop.put("mail.smtp.port", PORT);
-            prop.put("mail.smtp.auth", "true");
-            prop.put("mail.smtp.starttls.enable", "true"); //TLS
-
-            Session session = Session.getInstance(prop,
-                    new javax.mail.Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(USER, PASSWORD);
-                        }
-                    });
-
-            if (request.body() != null) {
-                JSONObject json = new JSONObject(request.body());
-                String subject = json.getString("subject");
-                String body = json.getString("body");
-                String from = json.getString("from");
-
-                try {
-
-                    Message message = new MimeMessage(session);
-                    message.setFrom(new InternetAddress(from));
-                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
-                    message.setSubject(subject);
-                    message.setText(body);
-
-                    Transport.send(message);
-
-                    System.out.println("Sent mail");
-
-                } catch (MessagingException e) {
-                    e.printStackTrace();
-                    response.status(500);
-                    response.body("ERROR: Mail could not be send");
-                }
-            } else {
-                response.status(400);
-                response.body("ERROR: Missing request body");
+        path("/api", () -> {
+            get("/info", (request, response) -> {
+                response.status(200);
+                response.body("Mail API is running");
                 return response;
-            }
-            response.status(200);
-            return response;
-        }));
+            });
+
+            post("/mail", (request, response) -> {
+
+                Properties prop = new Properties();
+                prop.put("mail.smtp.host", SMTP);
+                prop.put("mail.smtp.port", PORT);
+                prop.put("mail.smtp.auth", "true");
+                prop.put("mail.smtp.starttls.enable", "true");
+
+                Session session = Session.getInstance(prop,
+                        new Authenticator() {
+                            protected PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(USER, PASSWORD);
+                            }
+                        });
+
+                if (request.body() != null) {
+                    JSONObject json = new JSONObject(request.body());
+                    String subject = json.getString("subject");
+                    String body = json.getString("body");
+                    String from = json.getString("from");
+
+                    try {
+
+                        Message message = new MimeMessage(session);
+                        message.setFrom(new InternetAddress(from));
+                        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
+                        message.setSubject(subject);
+                        message.setText(body);
+
+                        Transport.send(message);
+
+                        System.out.println("Sent mail");
+
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                        response.status(500);
+                        response.body("ERROR: Mail could not be send");
+                    }
+                } else {
+                    response.status(400);
+                    response.body("ERROR: Missing request body");
+                    return response;
+                }
+                response.status(200);
+                response.body("");
+                return response;
+            });
+        });
     }
 }
