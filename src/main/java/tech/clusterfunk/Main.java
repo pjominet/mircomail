@@ -1,6 +1,7 @@
 package tech.clusterfunk;
 
 import org.json.JSONObject;
+import spark.Spark;
 
 import java.util.Properties;
 import javax.mail.*;
@@ -16,9 +17,14 @@ public class Main {
     private static final String USER = "jompa010@gmail.com";
     private static final String PASSWORD = "lxfkubkanxacdevr";
 
+    private static final String KEYSTORE_PATH = "keystore.jks";
+    private static final String KEYSTORE_PW = "mysupersecurepw";
+
     public static void main(String[] args) {
+        Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null , null);
+
         path("/api", () -> {
-            get("/info", ((request, response) -> "Mail API is running"));
+            get("/info", (request, response) -> "Mail API is running");
 
             post("/mail", (request, response) -> {
 
@@ -26,7 +32,7 @@ public class Main {
                 prop.put("mail.smtp.host", SMTP);
                 prop.put("mail.smtp.port", PORT);
                 prop.put("mail.smtp.auth", "true");
-                prop.put("mail.smtp.starttls.enable", "true"); //TLS
+                prop.put("mail.smtp.starttls.enable", "true");
 
                 Session session = Session.getInstance(prop,
                         new Authenticator() {
@@ -43,11 +49,11 @@ public class Main {
 
                     try {
 
-                        Message message = new MimeMessage(session);
-                        message.setFrom(new InternetAddress(from));
-                        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
-                        message.setSubject(subject);
-                        message.setText(body);
+                    Message message = new MimeMessage(session);
+                    message.setFrom(new InternetAddress(from));
+                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
+                    message.setSubject(subject);
+                    message.setText(body);
 
                         Transport.send(message);
 
@@ -57,6 +63,7 @@ public class Main {
                         e.printStackTrace();
                         response.status(500);
                         response.body("ERROR: Mail could not be send");
+                        return response;
                     }
                 } else {
                     response.status(400);
@@ -64,6 +71,7 @@ public class Main {
                     return response;
                 }
                 response.status(200);
+                response.body("");
                 return response;
             });
         });
