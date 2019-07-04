@@ -21,7 +21,24 @@ public class Main {
     private static final String KEYSTORE_PW = "mysupersecurepw";
 
     public static void main(String[] args) {
-        Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null , null);
+        Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null, null);
+
+        options("/*", (request, response) -> {
+
+            String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
+            if (accessControlRequestHeaders != null) {
+                response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+            }
+
+            String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
+            if (accessControlRequestMethod != null) {
+                response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+            }
+
+            return "OK";
+        });
+
+        before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
         path("/api", () -> {
             get("/info", (request, response) -> "Mail API is running");
@@ -49,11 +66,11 @@ public class Main {
 
                     try {
 
-                    Message message = new MimeMessage(session);
-                    message.setFrom(new InternetAddress(from));
-                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
-                    message.setSubject(subject);
-                    message.setText(body);
+                        Message message = new MimeMessage(session);
+                        message.setFrom(new InternetAddress(from));
+                        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(USER));
+                        message.setSubject(subject);
+                        message.setText(body);
 
                         Transport.send(message);
 
