@@ -1,6 +1,7 @@
 package tech.clusterfunk;
 
 import org.json.JSONObject;
+import spark.Spark;
 
 import java.util.Properties;
 import javax.mail.*;
@@ -16,7 +17,12 @@ public class Main {
     private static final String USER = "jompa010@gmail.com";
     private static final String PASSWORD = "lxfkubkanxacdevr";
 
+    private static final String KEYSTORE_PATH = "keystore.jks";
+    private static final String KEYSTORE_PW = "mysupersecurepw";
+
     public static void main(String[] args) {
+        Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null , null);
+
         path("/api", () -> post("/mail", (request, response) -> {
 
             Properties prop = new Properties();
