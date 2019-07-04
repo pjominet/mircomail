@@ -38,10 +38,16 @@ public class Main {
             return "OK";
         });
 
-        before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
+        before((request, response) -> {
+            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Content-Type", "text/plain");
+        });
 
         path("/api", () -> {
-            get("/info", (request, response) -> "Mail API is running");
+            get("/info", (request, response) -> {
+                System.out.println("200: Info sent");
+                return "Mail API is running";
+            });
 
             post("/mail", (request, response) -> {
 
@@ -74,22 +80,21 @@ public class Main {
 
                         Transport.send(message);
 
-                        System.out.println("Sent mail");
-
                     } catch (MessagingException e) {
                         e.printStackTrace();
                         response.status(500);
-                        response.body("ERROR: Mail could not be send");
-                        return response;
+                        System.err.println("500: Mail could not be send");
+                        return "ERROR: Mail could not be send";
                     }
                 } else {
                     response.status(400);
-                    response.body("ERROR: Missing request body");
-                    return response;
+                    System.err.println("400: Missing request body");
+                    return "ERROR: Missing request body";
                 }
+
                 response.status(200);
-                response.body("");
-                return response;
+                System.out.println("200: Mail sent");
+                return "OK";
             });
         });
     }
