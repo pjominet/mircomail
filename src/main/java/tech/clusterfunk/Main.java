@@ -24,11 +24,7 @@ public class Main {
         Spark.secure(KEYSTORE_PATH, KEYSTORE_PW, null , null);
 
         path("/api", () -> {
-            get("/info", (request, response) -> {
-                response.status(200);
-                response.body("Mail API is running");
-                return response;
-            });
+            get("/info", (request, response) -> "Mail API is running");
 
             post("/mail", (request, response) -> {
 
@@ -67,6 +63,7 @@ public class Main {
                         e.printStackTrace();
                         response.status(500);
                         response.body("ERROR: Mail could not be send");
+                        return response;
                     }
                 } else {
                     response.status(400);
